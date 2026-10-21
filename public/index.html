@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Company</title>
+<link rel="icon" href="data:,">
+<script src="engine.js"></script>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#2a323d; --text:#e6edf3; --dim:#8b97a6;
+  --gold:#e8b44a; --good:#3fb97c; --bad:#e5534b; --blue:#58a6ff; --violet:#b392f0;
+  --floor:#1a2029; --wall:#3a4656;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,"Noto Sans Arabic","Noto Naskh Arabic",system-ui,sans-serif;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+.brand{font-weight:800;font-size:17px;letter-spacing:.2px}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--dim)}
+.clock{font-variant-numeric:tabular-nums;direction:ltr;font-size:20px;font-weight:700}
+.date{color:var(--dim);font-size:12px}
+.chip{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--panel2);border:1px solid var(--line)}
+.chip.on{color:var(--good);border-color:#285c43;background:#13261d}
+.chip.off{color:var(--dim)}
+.chip.warn{color:var(--gold);border-color:#6b5320;background:#2a2212}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:6px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:#44505f}
+.btn.pri{background:#2a5db0;border-color:#3b73cf}
+.btn.gold{background:#7a5a17;border-color:var(--gold)}
+.btn.red{background:#5b2320;border-color:#8a342f}
+main{display:flex;gap:12px;padding:12px;align-items:flex-start}
+#officeWrap{flex:1.7;min-width:0;position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--floor)}
+#stage{position:absolute;left:0;top:0;width:1000px;height:680px;transform-origin:0 0;direction:ltr;
+  background:
+   linear-gradient(var(--floor),var(--floor)),
+   repeating-linear-gradient(0deg,transparent 0 39px,#ffffff08 39px 40px),
+   repeating-linear-gradient(90deg,transparent 0 39px,#ffffff08 39px 40px);
+  background-blend-mode:normal}
+#stage::before{content:"";position:absolute;inset:0;background:
+   repeating-linear-gradient(0deg,transparent 0 39px,#ffffff07 39px 40px),
+   repeating-linear-gradient(90deg,transparent 0 39px,#ffffff07 39px 40px);pointer-events:none}
+.room{position:absolute;border:3px solid var(--wall);border-radius:10px;background:#ffffff05}
+.room .rl{position:absolute;top:-11px;left:14px;background:var(--floor);padding:0 8px;font-size:12px;color:var(--dim);font-weight:700;unicode-bidi:plaintext}
+.room.boss{background:#e8b44a0d;border-color:#7a6230}
+.room.meet{background:#58a6ff0b}
+.room.kit{background:#3fb97c0a}
+.room.lounge{background:#b392f009}
+.room.open{border-style:dashed;border-color:#2f3a48}
+.desk{position:absolute;width:120px;height:60px;background:#2b3542;border:2px solid #425065;border-radius:8px}
+.desk::before{content:"";position:absolute;left:38px;top:8px;width:44px;height:26px;background:#0b1118;border:2px solid #5a6a80;border-radius:3px;box-shadow:0 0 14px var(--glow,#58a6ff55) inset}
+.desk::after{content:"";position:absolute;left:46px;top:40px;width:28px;height:10px;background:#3a4656;border-radius:3px}
+.desk .tag{position:absolute;bottom:-18px;left:0;width:100%;text-align:center;font-size:10px;color:var(--dim);display:none}
+.deco{position:absolute;font-size:30px;line-height:1;user-select:none;filter:drop-shadow(0 2px 2px #0008)}
+.table{position:absolute;border-radius:50%;background:#2b3542;border:2px solid #425065}
+.agent{position:absolute;left:0;top:0;width:0;height:0;transition:none;cursor:pointer}
+.ready .agent{transition:transform 2.6s cubic-bezier(.4,.1,.2,1)}
+.agent .av{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;background:#10151c;border:3px solid var(--c);display:flex;align-items:center;justify-content:center;font-size:27px;box-shadow:0 4px 14px #0009,0 0 0 3px #00000040}
+.agent.sel .av{box-shadow:0 0 0 4px #fff3,0 0 18px var(--c)}
+.agent .nm{position:absolute;left:-65px;top:30px;width:130px;text-align:center;font-size:12px;font-weight:700;text-shadow:0 1px 3px #000;unicode-bidi:plaintext}
+.agent .nm small{display:block;font-weight:500;color:var(--dim);font-size:10px}
+.agent .nm em{font-style:normal;display:inline-block;margin-top:1px;padding:0 6px;border-radius:99px;background:#000a;font-size:10px;color:#cfd8e3;font-weight:500}
+.agent .bub{position:absolute;left:-95px;bottom:34px;width:190px;text-align:center;font-size:11.5px;line-height:1.35;padding:6px 8px;border-radius:10px;background:#f3f6fa;color:#10151c;font-weight:600;opacity:0;transform:translateY(4px);transition:.4s;pointer-events:none;direction:rtl}
+.agent .bub::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#f3f6fa}
+.agent .bub.show{opacity:1;transform:none}
+.agent .bub.dm{background:#e9defc}.agent .bub.dm::after{border-top-color:#e9defc}
+.agent .bub.work{background:#d6f5e4}.agent .bub.work::after{border-top-color:#d6f5e4}
+.agent .th{position:absolute;left:14px;top:-44px;font-size:20px;display:none;animation:bob 1s infinite}
+.agent.busy .th{display:block}
+.agent.home .av{opacity:.35;filter:grayscale(.7)}
+.agent.fired .av{opacity:.3;filter:grayscale(1)}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.bossAv{position:absolute;left:150px;top:112px}
+.bossAv .av{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;background:#2a2212;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:27px}
+.bossAv .nm{position:absolute;left:-50px;top:30px;width:100px;text-align:center;font-size:12px;font-weight:700;color:var(--gold)}
+#night{position:absolute;inset:0;background:linear-gradient(#050a1ccc,#050a1ccc);display:none;align-items:flex-start;justify-content:center;padding-top:300px;pointer-events:none;z-index:40}
+#night b{font-size:26px;color:#c7d6ff;text-shadow:0 2px 10px #000}
+#night small{display:block;text-align:center;color:#91a4cf;font-size:13px;margin-top:6px}
+.isnight #night{display:flex}
+.isnight .agent{z-index:45}
+aside{flex:1;min-width:340px;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:calc(100vh - 86px);position:sticky;top:70px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:10px 4px;background:none;border:0;border-bottom:3px solid transparent;cursor:pointer;color:var(--dim);font-weight:700;font-size:13px}
+.tabs button.on{color:var(--text);border-bottom-color:var(--blue)}
+.pane{display:none;flex:1;overflow:auto;padding:12px}
+.pane.on{display:block}
+#pane-feed.on{display:flex;flex-direction:column;padding:0}
+.filters{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.filters button{border:1px solid var(--line);background:none;border-radius:99px;padding:2px 10px;font-size:12px;color:var(--dim);cursor:pointer}
+.filters button.on{background:var(--panel2);color:var(--text);border-color:#4a5666}
+#feed{flex:1;overflow:auto;padding:8px 10px}
+.fi{padding:7px 9px;margin-bottom:6px;border-radius:9px;background:var(--panel2);border-right:3px solid var(--line);line-height:1.5;word-break:break-word}
+.fi .meta{font-size:10.5px;color:var(--dim);display:flex;gap:6px;margin-bottom:1px}
+.fi b{font-weight:800}
+.fi.dm{border-right-color:var(--violet);background:#1e1a2b}
+.fi.boss{border-right-color:var(--gold);background:#2a2212}
+.fi.toboss{border-right-color:var(--gold);background:#2d2610}
+.fi.work{border-right-color:var(--good)}
+.fi.event,.fi.promo{border-right-color:var(--gold);background:#2a2212}
+.fi.task{border-right-color:var(--blue)}
+.fi.break,.fi.system{opacity:.7;font-size:12.5px}
+.fi.error{border-right-color:var(--bad);background:#2b1715;font-size:12.5px;direction:ltr;text-align:left}
+h4{margin:14px 0 6px;font-size:12px;color:var(--dim);letter-spacing:.3px;text-transform:uppercase}
+h4:first-child{margin-top:0}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.row{display:flex;gap:6px;margin-bottom:6px}
+.row>*{min-width:0}
+input,select,textarea{background:#0e1319;border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+textarea{resize:vertical;min-height:54px}
+label.ck{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--dim)}
+label.ck input{width:auto}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pill{padding:3px 10px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);font-size:12px;cursor:pointer}
+.pill:hover{border-color:#4a5666}
+.th-i{padding:7px 9px;margin-bottom:6px;border-radius:9px;background:var(--panel2);font-size:13px;line-height:1.55;border-right:3px solid #4a5666}
+.th-i.reflection{border-right-color:var(--violet)}
+.th-i.reasoning{border-right-color:var(--dim);font-size:12px;color:var(--dim)}
+.th-i small{display:block;color:var(--dim);font-size:10.5px}
+.mem{white-space:pre-wrap;font-size:13px;line-height:1.6}
+table.mx{width:100%;border-collapse:collapse;text-align:center;font-size:12px}
+table.mx th,table.mx td{padding:6px 4px;border:1px solid var(--line)}
+table.mx td.s{font-weight:800;font-size:15px}
+.pair{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;background:var(--panel2)}
+.pair .lbl{font-weight:800}
+.pair small{color:var(--dim);display:block}
+canvas#chart{width:100%;height:220px;display:block;background:#0e1319;border:1px solid var(--line);border-radius:10px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:11px;color:var(--dim)}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin-left:4px}
+.bar{height:6px;background:#0e1319;border-radius:99px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--good)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px}
+.kv span:nth-child(odd){color:var(--dim)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#243042;border:1px solid #3b4a60;padding:9px 16px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+#toast.show{opacity:1}
+.empty{color:var(--dim);text-align:center;padding:24px 10px;line-height:1.7}
+@media (max-width:980px){
+  main{flex-direction:column;padding:8px}
+  aside{position:static;width:100%;max-width:none;height:72vh;min-width:0}
+  #officeWrap{width:100%;flex:none}
+}
+
+#setupBar{display:none;background:#2a2212;border-bottom:1px solid #6b5320;color:#f0d9a0;padding:9px 16px;gap:10px;align-items:center;flex-wrap:wrap}
+#setupBar.show{display:flex}
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:200;padding:24px 12px}
+#modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);box-shadow:0 20px 60px #000c;display:flex;flex-direction:column;max-height:calc(100vh - 48px);margin:auto 0}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);flex:none}
+.mhead b{font-size:16px}
+.mbody{padding:6px 18px 18px;overflow:auto;flex:1;min-height:0}
+.mfoot{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);flex:none}
+.mbody h3{margin:20px 0 8px;font-size:14px;color:var(--gold)}
+.mbody small{color:var(--dim);display:block;line-height:1.6;margin:2px 0 8px}
+.krow{display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:center;margin-bottom:6px}
+.krow .res{grid-column:2 / 4;font-size:12px;direction:ltr;text-align:left;word-break:break-word}
+.res.ok{color:var(--good)}.res.bad{color:var(--bad)}
+.acard{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--panel2)}
+.acard .r1{display:grid;grid-template-columns:54px 1fr 1fr;gap:6px;margin-bottom:6px}
+.acard .r2{display:grid;grid-template-columns:1fr 1.4fr;gap:6px;margin-bottom:6px}
+.acard textarea{min-height:48px;margin-bottom:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g2 label,.g3 label{font-size:12px;color:var(--dim);display:block}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media (max-width:600px){.g3,.g2,.acard .r1,.acard .r2,.krow{grid-template-columns:1fr}.krow .res{grid-column:1}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span id="co">…</span><small id="goal"></small></div>
+  <div class="sp"></div>
+  <div><div class="clock" id="clock">--:--:--</div><div class="date" id="date"></div></div>
+  <span class="chip" id="chipDay">اليوم 1</span>
+  <span class="chip" id="chipWork"></span>
+  <span class="chip" id="chipSpeed" style="display:none"></span>
+  
+  <span class="chip warn" id="chipBusy" style="display:none"></span>
+  <button class="btn" id="btnPause">⏸ إيقاف</button>
+  <button class="btn pri" id="btnSettings">⚙ الإعدادات</button>
+</header>
+<div id="setupBar"><span>⚠ لسه ماحطيتش مفاتيح الـ API — الموظفين مش هيعرفوا يفكروا.</span><button class="btn gold" id="sbOpen">افتح الإعدادات</button><button class="btn" id="sbMock">جرّب بموديلات وهمية الأول</button></div>
+
+<main>
+  <section id="officeWrap"><div id="stage"></div></section>
+  <aside>
+    <div class="tabs">
+      <button data-t="feed" class="on">📡 مباشر</button>
+      <button data-t="agent">🧠 الموظف</button>
+      <button data-t="rel">❤️ العلاقات</button>
+      <button data-t="boss">👔 المدير</button>
+    </div>
+
+    <div class="pane on" id="pane-feed">
+      <div class="filters">
+        <button data-f="all" class="on">الكل</button>
+        <button data-f="boss">المدير</button>
+        <button data-f="chat">الشات</button>
+        <button data-f="dm">الخاص</button>
+        <button data-f="work">الشغل</button>
+      </div>
+      <div id="feed"></div>
+    </div>
+
+    <div class="pane" id="pane-agent">
+      <div class="pills" id="agentPills"></div>
+      <div id="agentBody"><div class="empty">اضغط على موظف في المكتب أو اختار من فوق</div></div>
+    </div>
+
+    <div class="pane" id="pane-rel">
+      <div id="relBody"></div>
+    </div>
+
+    <div class="pane" id="pane-boss">
+      <h4>رسالة</h4>
+      <div class="card">
+        <div class="row"><select id="msgTo"></select></div>
+        <div class="row"><textarea id="msgText" placeholder="اكتب رسالتك كمدير…"></textarea></div>
+        <button class="btn pri" id="msgSend">إرسال</button>
+      </div>
+
+      <h4>ترقية / تغيير منصب / علاوة</h4>
+      <div class="card">
+        <div class="row"><select id="prName"></select></div>
+        <div class="row"><input id="prTitle" placeholder="المسمى الجديد (اتركه فاضي لو علاوة بس)"></div>
+        <div class="row"><input id="prRaise" type="number" step="1" placeholder="نسبة العلاوة %"></div>
+        <label class="ck"><input type="checkbox" id="prAnn" checked> أعلن التغيير للفريق كله</label>
+        <div style="height:6px"></div>
+        <button class="btn gold" id="prGo">تنفيذ</button>
+      </div>
+
+      <h4>مهمة جديدة</h4>
+      <div class="card">
+        <div class="row"><input id="tkTitle" placeholder="عنوان المهمة"></div>
+        <div class="row"><select id="tkWho"></select></div>
+        <button class="btn" id="tkGo">إضافة المهمة</button>
+      </div>
+
+      <h4>حدث في الشركة</h4>
+      <div class="card">
+        <div class="pills" id="presets"></div>
+        <div class="row"><textarea id="evText" placeholder="مثلاً: العميل رفض النسخة الأولى…"></textarea></div>
+        <button class="btn" id="evGo">أعلن للجميع</button>
+      </div>
+
+      <h4>هدف الشركة</h4>
+      <div class="card">
+        <div class="row"><input id="goalText"></div>
+        <button class="btn" id="goalGo">تغيير الهدف</button>
+      </div>
+
+      <h4>تحكم</h4>
+      <div class="card">
+        <div class="row"><select id="ctlWho"></select></div>
+        <div class="pills">
+          <button class="btn" id="ctlTurn">خليه يتحرك دلوقتي</button>
+          <button class="btn" id="ctlReflect">إنهاء اليوم الآن (تقييمات)</button>
+          <button class="btn" id="ctlSkip">⏭ تخطي المساء</button>
+          <button class="btn red" id="ctlFire">فصل</button>
+          <button class="btn" id="ctlHire">إرجاع</button>
+        </div>
+      </div>
+
+      <h4>المهام</h4>
+      <div id="tasks"></div>
+
+      <h4>تصدير البيانات</h4>
+      <div class="pills"><span class="pill" data-ex="json">JSON كامل</span><span class="pill" data-ex="feed">feed.csv</span><span class="pill" data-ex="thoughts">thoughts.csv</span><span class="pill" data-ex="relations">relations.csv</span></div>
+    </div>
+  </aside>
+</main>
+<div id="modal"><div class="mbox"><div class="mhead"><b>⚙ الإعدادات</b><button class="btn" id="mClose">✕</button></div><div class="mbody" id="mBody"></div><div class="mfoot"><button class="btn pri" id="mSave">حفظ</button><button class="btn" id="mCancel">إلغاء</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AR_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const PROVS = SimEngine.PROVIDERS;
+const PROV = Object.fromEntries(Object.entries(PROVS).map(([k, v]) => [k, v.label]));
+
+/* ---------------- storage (state in IndexedDB, API keys in localStorage) ---------------- */
+const store = (() => {
+  const open = () => new Promise((res, rej) => { const q = indexedDB.open('ai-company', 1); q.onupgradeneeded = () => q.result.createObjectStore('kv'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction('kv', mode); const r = fn(t.objectStore('kv')); t.oncomplete = () => { db.close(); res(r && r.result); }; t.onerror = () => rej(t.error); }); };
+  return {
+    async load() { try { return await tx('readonly', s => s.get('state')); } catch (e) { try { return JSON.parse(localStorage.getItem('aic_state') || 'null'); } catch (e2) { return null; } } },
+    save(state) { tx('readwrite', s => s.put(state, 'state')).catch(() => { try { localStorage.setItem('aic_state', JSON.stringify(state)); } catch (e) {} }); },
+    async clear() { try { await tx('readwrite', s => s.clear()); } catch (e) {} try { localStorage.removeItem('aic_state'); } catch (e) {} },
+  };
+})();
+let KEYS = {};
+try { KEYS = JSON.parse(localStorage.getItem('aic_keys') || '{}') || {}; } catch (e) { KEYS = {}; }
+const saveKeys = () => { try { localStorage.setItem('aic_keys', JSON.stringify(KEYS)); } catch (e) {} };
+
+async function post(payload) {
+  let r;
+  try { r = await fetch('/api/llm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); }
+  catch (e) { throw new Error('مفيش اتصال بالنت أو بالسيرفر'); }
+  if (!r.headers.get('x-sim-proxy')) throw Object.assign(new Error('الفانكشن /api/llm مش شغّالة — لازم الموقع يتفتح من Vercel (أو npx vercel dev محلياً)'), { fatal: true });
+  const text = await r.text(); let json = null; try { json = JSON.parse(text); } catch (e) {}
+  return { status: r.status, json, text, retryAfter: r.headers.get('retry-after') };
+}
+
+const sim = SimEngine.createSim({ post, getKey: p => (KEYS[p] || '').trim(), save: s => store.save(s) });
+
+let S = null, lastId = 0, feed = [], selected = null, tab = 'feed', filt = 'all', agentSig = '', builtN = 0;
+
+function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('show'), 2400); }
+const colorOf = n => (S && S.agents.find(a => a.name === n)?.color) || (n === 'Boss' ? 'var(--gold)' : 'var(--dim)');
+const nameHTML = n => n === 'Boss' ? '<b style="color:var(--gold)">المدير</b>' : `<b style="color:${colorOf(n)}">${esc(n)}</b>`;
+
+/* ---------------- office stage ---------------- */
+const SEAT = i => ({ x: 180 + (i % 3) * 320, y: (i < 3 ? 350 : 495) });
+function buildStage() {
+  const st = $('#stage');
+  let h = `
+  <div class="room boss" style="left:20px;top:24px;width:290px;height:175px"><span class="rl">مكتب المدير</span></div>
+  <div class="room meet" style="left:690px;top:24px;width:290px;height:175px"><span class="rl">غرفة الاجتماعات (الشات العام)</span></div>
+  <div class="room open" style="left:20px;top:222px;width:960px;height:325px"><span class="rl">المساحة المفتوحة</span></div>
+  <div class="room kit" style="left:20px;top:570px;width:300px;height:92px"><span class="rl">المطبخ</span></div>
+  <div class="room lounge" style="left:340px;top:570px;width:380px;height:92px"><span class="rl">ركن الاستراحة</span></div>
+  <div class="desk" style="left:90px;top:62px;--glow:#e8b44a66"></div>
+  <div class="deco" style="left:250px;top:50px">🪴</div>
+  <div class="table" style="left:780px;top:70px;width:110px;height:70px"></div>
+  <div class="deco" style="left:700px;top:40px;font-size:26px">📋</div>
+  <div class="deco" style="left:925px;top:150px">🪴</div>
+  <div class="deco" style="left:40px;top:590px">☕</div>
+  <div class="deco" style="left:260px;top:600px">🍪</div>
+  <div class="deco" style="left:380px;top:600px">🛋️</div>
+  <div class="deco" style="left:640px;top:598px">📺</div>
+  <div class="deco" style="left:930px;top:600px">🚪</div>
+  <div class="deco" style="left:945px;top:240px">🪴</div>`;
+  S.agents.forEach(a => { const i = a.idx, r = { x: 120 + (i % 3) * 320, y: i < 3 ? 262 : 407 }; h += `<div class="desk" style="left:${r.x}px;top:${r.y}px;--glow:${a.color}66"></div>`; });
+  h += `<div class="bossAv"><div class="av">👔</div><div class="nm">أنت (المدير)</div></div>`;
+  S.agents.forEach(a => {
+    h += `<div class="agent" id="ag-${a.idx}" style="--c:${a.color}" data-n="${esc(a.name)}">
+      <div class="bub"></div><div class="th">💭</div><div class="av">${esc(a.emoji)}</div>
+      <div class="nm"><span class="n"></span><small class="t"></small><em class="m"></em></div></div>`;
+  });
+  h += `<div id="night"><div><b>🌙 خارج ساعات العمل</b><small id="nightSub"></small></div></div>`;
+  st.innerHTML = h;
+  $$('.agent').forEach(e => e.addEventListener('click', () => { selectAgent(e.dataset.n); setTab('agent'); }));
+  fit();
+  st.parentElement.classList.remove('ready');
+  requestAnimationFrame(() => requestAnimationFrame(() => st.parentElement.classList.add('ready')));
+  builtN = S.agents.length;
+}
+function fit() { const w = $('#officeWrap'), s = w.clientWidth / 1000; $('#stage').style.transform = `scale(${s})`; w.style.height = (680 * s) + 'px'; }
+addEventListener('resize', fit);
+
+function posFor(a, group) {
+  const i = a.idx, seat = SEAT(i), k = group.indexOf(a.name), n = group.length, off = (k - (n - 1) / 2) * 52;
+  switch (true) {
+    case a.loc === 'desk': return seat;
+    case a.loc === 'meeting': return { x: 800 + off, y: 150 };
+    case a.loc === 'kitchen': return { x: 130 + off, y: 622 };
+    case a.loc === 'lounge': return { x: 520 + off, y: 622 };
+    case a.loc === 'home': return { x: 150 + i * 140, y: 640 };
+    case a.loc === 'fired': return { x: 960, y: 520 };
+    case a.loc === '@Boss': return { x: 120 + i * 60, y: 240 };
+    case a.loc.startsWith('@'): { const t = S.agents.find(x => x.name === a.loc.slice(1)); if (!t) return seat; const s = SEAT(t.idx); return { x: s.x + 64, y: s.y + 6 }; }
+  }
+  return seat;
+}
+function renderAgents() {
+  const groups = {};
+  S.agents.forEach(a => (groups[a.loc.startsWith('@') ? 'x' + a.name : a.loc] ||= []).push(a.name));
+  S.agents.forEach(a => {
+    const el = $('#ag-' + a.idx); if (!el) return;
+    const p = posFor(a, groups[a.loc.startsWith('@') ? 'x' + a.name : a.loc]);
+    el.style.transform = `translate(${p.x}px,${p.y}px)`;
+    el.style.zIndex = Math.round(p.y);
+    el.className = 'agent' + (a.busy ? ' busy' : '') + (a.loc === 'home' ? ' home' : '') + (a.loc === 'fired' ? ' fired' : '') + (selected === a.name ? ' sel' : '');
+    el.querySelector('.n').textContent = a.name;
+    el.querySelector('.t').textContent = a.title;
+    el.querySelector('.m').textContent = a.mood || '…';
+    el.querySelector('.m').style.display = a.mood ? '' : 'none';
+    const b = el.querySelector('.bub'), L = a.last;
+    if (L && S.server_ts - L.t < (S.bubble_ttl || 150) && a.loc !== 'home') {
+      const t = L.text.replace(/^\[#\d+[^\]]*\]\s*/, '');
+      b.textContent = (L.kind === 'dm' ? '🔒 ' + (L.target === 'Boss' ? 'للمدير' : L.target) + ': ' : L.kind === 'work' ? '🛠 ' : L.kind === 'break' ? '☕ ' : '') + (t.length > 95 ? t.slice(0, 95) + '…' : t);
+      b.className = 'bub show ' + L.kind;
+    } else b.className = 'bub';
+  });
+}
+
+/* ---------------- header ---------------- */
+function fillSelects() {
+  const sig = S.agents.map(a => a.name + a.active).join('|');
+  if (sig === agentSig) return; agentSig = sig;
+  const opts = S.agents.map(a => `<option value="${esc(a.name)}">${esc(a.emoji)} ${esc(a.name)}</option>`).join('');
+  const cur = ['#msgTo', '#prName', '#tkWho', '#ctlWho'].map(s => $(s).value);
+  $('#msgTo').innerHTML = '<option value="all">📢 الكل</option>' + opts;
+  $('#prName').innerHTML = opts; $('#tkWho').innerHTML = opts; $('#ctlWho').innerHTML = opts;
+  ['#msgTo', '#prName', '#tkWho', '#ctlWho'].forEach((s, i) => { if (cur[i] && [...$(s).options].some(o => o.value === cur[i])) $(s).value = cur[i]; });
+  $('#agentPills').innerHTML = S.agents.map(a => `<span class="pill" data-n="${esc(a.name)}" style="border-color:${a.color}">${esc(a.emoji)} ${esc(a.name)}</span>`).join('');
+  $$('#agentPills .pill').forEach(p => p.onclick = () => selectAgent(p.dataset.n));
+}
+function renderHeader() {
+  $('#co').textContent = S.company;
+  $('#goal').textContent = '🎯 ' + S.goal;
+  $('#chipDay').textContent = 'اليوم ' + S.day;
+  const w = $('#chipWork');
+  w.textContent = S.paused ? '⏸ متوقفة' : S.work ? `🟢 وقت الشغل من ${S.work_hours[0]}:00 لـ ${S.work_hours[1]}:00` : '🌙 المساء — الموظفين في البيت';
+  w.className = 'chip ' + (S.paused ? 'warn' : S.work ? 'on' : 'off');
+  const sp = $('#chipSpeed'); sp.style.display = ''; sp.textContent = `⚡ ${+S.day_real_minutes.toFixed(1)} دقيقة = يوم · شغّالة وانت فاتح الصفحة بس`;
+  const bz = $('#chipBusy'), who = S.busy;
+  bz.style.display = who ? '' : 'none'; bz.textContent = who ? `🤔 ${who} بيفكر… (الساعة واقفة لحد ما يخلص)` : '';
+  $('#btnPause').textContent = S.paused ? '▶ استئناف' : '⏸ إيقاف';
+  $('#officeWrap').classList.toggle('isnight', !S.work);
+  $('#nightSub').textContent = `الموظفين رجعوا البيت — اليوم الجديد بيبدأ ${S.work_hours[0]}:00 صباحاً (أو اضغط "تخطي المساء" من تبويب المدير)`;
+  $('#setupBar').classList.toggle('show', !!S.needs_setup);
+  $('#tasks').innerHTML = S.tasks.length ? S.tasks.map(t => `<div class="card" style="padding:8px 10px;margin-bottom:6px">
+     <div>#${t.id} ${esc(t.title)}</div>
+     <small style="color:var(--dim)">${nameHTML(t.assignee)} · ${t.status === 'done' ? '✅ تمت' : t.progress + '%'}</small>
+     <div class="bar"><i style="width:${t.progress}%"></i></div></div>`).join('') : '<div class="empty">مفيش مهام</div>';
+  const m = S.now.match(/(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/), d = new Date(Date.UTC(+m[1], m[2] - 1, +m[3]));
+  $('#clock').textContent = `${m[4]}:${m[5]}`;
+  $('#date').textContent = `${AR_DAYS[d.getUTCDay()]} ${+m[3]}/${+m[2]}/${m[1]}`;
+}
+
+/* ---------------- feed ---------------- */
+const KIND_FILTER = {
+  boss: m => m.actor === 'Boss' || m.target === 'Boss', chat: m => m.kind === 'say', dm: m => m.kind === 'dm',
+  work: m => m.kind === 'work' || m.kind === 'task', all: () => true,
+};
+function feedItem(m) {
+  const hh = m.ts.slice(11, 16), meta = `<div class="meta"><span>${hh}</span><span>يوم ${m.day}</span></div>`, t = esc(m.text);
+  let cls = m.kind, body;
+  switch (m.kind) {
+    case 'say': body = `${nameHTML(m.actor)}: ${t}`; break;
+    case 'dm':
+      if (m.target === 'Boss') { cls = 'toboss'; body = `📨 ${nameHTML(m.actor)} ← للمدير: ${t}`; }
+      else body = `🔒 ${nameHTML(m.actor)} ← ${nameHTML(m.target)}: ${t}`;
+      break;
+    case 'boss': body = `👔 المدير ← ${m.target === 'all' ? 'الكل' : nameHTML(m.target)}: ${t}`; break;
+    case 'work': body = `🛠 ${nameHTML(m.actor)}: ${t}`; break;
+    case 'break': body = `☕ ${nameHTML(m.actor)}: ${t}`; break;
+    case 'task': body = `📌 ${t}`; break;
+    case 'error': body = `⚠ ${esc(m.actor)} — ${t}`; break;
+    default: body = t;
+  }
+  return `<div class="fi ${cls}">${meta}${body}</div>`;
+}
+function renderFeed(reset) {
+  const box = $('#feed'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  if (reset) box.innerHTML = feed.filter(KIND_FILTER[filt]).map(feedItem).join('') || '<div class="empty">لسه مفيش أحداث.<br>الموظفين هيبدأوا يتحركوا خلال ثواني.</div>';
+  box.scrollTop = near || reset ? box.scrollHeight : box.scrollTop;
+}
+function pollFeed() {
+  const rows = sim.getFeed(lastId, 200);
+  if (!rows.length) return;
+  const empty = feed.length === 0;
+  rows.forEach(r => { feed.push(r); lastId = Math.max(lastId, r.id); });
+  if (feed.length > 800) feed = feed.slice(-600);
+  if (empty) return renderFeed(true);
+  const box = $('#feed'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  if ($('#feed .empty')) box.innerHTML = '';
+  box.insertAdjacentHTML('beforeend', rows.filter(KIND_FILTER[filt]).map(feedItem).join(''));
+  while (box.children.length > 600) box.removeChild(box.firstChild);
+  if (near) box.scrollTop = box.scrollHeight;
+}
+$$('.filters button').forEach(b => b.onclick = () => { $$('.filters button').forEach(x => x.classList.remove('on')); b.classList.add('on'); filt = b.dataset.f; renderFeed(true); });
+
+/* ---------------- agent tab ---------------- */
+function selectAgent(n) { selected = n; $$('#agentPills .pill').forEach(p => p.style.background = p.dataset.n === n ? 'var(--line)' : ''); renderAgents(); loadAgent(); }
+const scoreColor = s => s >= 4 ? 'var(--good)' : s <= -4 ? 'var(--bad)' : 'var(--dim)';
+function loadAgent() {
+  if (!selected) return;
+  const d = sim.getAgentDetail(selected); if (d.error) return;
+  const a = S.agents.find(x => x.name === selected) || {};
+  const th = d.thoughts.map(t => `<div class="th-i ${t.kind}"><small>${t.ts.slice(11, 16)} · يوم ${t.day} · ${t.kind === 'thought' ? 'تفكير' : t.kind === 'reflection' ? 'تأمل نهاية اليوم' : 'تفكير خام للموديل'}</small>${esc(t.text)}</div>`).join('') || '<div class="empty">لسه ماكتبش أفكار</div>';
+  $('#agentBody').innerHTML = `
+    <div class="card"><div style="display:flex;gap:10px;align-items:center">
+      <div style="font-size:34px">${esc(a.emoji)}</div>
+      <div><div style="font-weight:800;font-size:16px;color:${a.color}">${esc(d.name)}</div>
+      <div style="color:var(--dim);font-size:12px">${esc(d.title)} · ${PROV[d.provider] || d.provider} / ${esc(d.model)}</div></div></div>
+      <div class="kv" style="margin-top:8px"><span>المزاج</span><span>${esc(d.mood || '—')}</span>
+      <span>المرتب</span><span>${Number(d.salary).toLocaleString('en-US')} ${esc(S.currency)}</span></div></div>
+    <h4>الشخصية والهدف السري (مخفيين عن زمايله)</h4>
+    <div class="card" style="font-size:13px;line-height:1.6">${esc(d.persona)}<br><span style="color:var(--gold)">🎯 ${esc(d.private_goal)}</span></div>
+    <h4>رأيه في زمايله (آخر تقييم)</h4>
+    ${d.relations.map(r => `<div class="pair"><div><span class="lbl">${nameHTML(r.dst)}</span><small>${esc(r.reason)}</small></div><div style="font-size:20px;font-weight:800;color:${scoreColor(r.score)}">${r.score > 0 ? '+' : ''}${Math.round(r.score)}</div></div>`).join('') || '<div class="empty">التقييمات بتتسجل نهاية كل يوم عمل</div>'}
+    <h4>ذاكرته</h4><div class="card mem">${esc(d.memory) || '<span style="color:var(--dim)">فاضية لحد دلوقتي</span>'}</div>
+    <h4>مهامه</h4>${d.tasks.map(t => `<div class="card" style="padding:8px 10px;margin-bottom:6px">#${t.id} ${esc(t.title)}<div class="bar"><i style="width:${t.progress}%"></i></div></div>`).join('') || '<div class="empty">مفيش</div>'}
+    <h4>أفكاره (آخر ٤٠)</h4>${th}`;
+}
+
+/* ---------------- relations tab ---------------- */
+let relRows = [];
+function loadRel() {
+  relRows = sim.getRelations();
+  const A = S.agents.map(a => a.name), body = $('#relBody');
+  if (!relRows.length) {
+    body.innerHTML = `<div class="empty">التقييمات بتتسجل مرة في نهاية كل يوم عمل (الساعة ${sim.getConfig().reflection_hour}:00 بتوقيت الشركة).<br>أول تقييم هيظهر بعد أول يوم.<br><br><button class="btn" id="relNow">إنهاء اليوم الآن (للتجربة)</button></div>`;
+    $('#relNow').onclick = () => { sim.boss('control', { action: 'reflect_now' }); toast('هيتسجل التقييم خلال ثواني'); };
+    return;
+  }
+  const last = {}; relRows.forEach(r => last[r.src + '>' + r.dst] = r);
+  let t = '<table class="mx"><tr><th>من \\ إلى</th>' + A.map(n => `<th>${nameHTML(n)}</th>`).join('') + '</tr>';
+  A.forEach(s => { t += `<tr><th>${nameHTML(s)}</th>` + A.map(d => {
+    if (s === d) return '<td style="color:var(--line)">—</td>';
+    const r = last[s + '>' + d]; return r ? `<td class="s" style="color:${scoreColor(r.score)}" title="${esc(r.reason)}">${r.score > 0 ? '+' : ''}${Math.round(r.score)}</td>` : '<td>…</td>';
+  }).join('') + '</tr>'; });
+  t += '</table>';
+  let pairs = '';
+  for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) {
+    const x = last[A[i] + '>' + A[j]], y = last[A[j] + '>' + A[i]]; if (!x && !y) continue;
+    const avg = ((x?.score ?? 0) + (y?.score ?? 0)) / ((x ? 1 : 0) + (y ? 1 : 0));
+    const lbl = avg >= 4 ? '🤝 أصدقاء' : avg <= -4 ? '⚔️ عداوة' : avg >= 1.5 ? '🙂 ودّي' : avg <= -1.5 ? '😒 متوتر' : '😐 محايد';
+    pairs += `<div class="pair"><div><span class="lbl">${nameHTML(A[i])} ↔ ${nameHTML(A[j])}</span>
+      <small>${esc(A[i])}→${esc(A[j])}: ${x ? Math.round(x.score) : '…'} · ${esc(A[j])}→${esc(A[i])}: ${y ? Math.round(y.score) : '…'}</small></div>
+      <div class="lbl" style="color:${scoreColor(avg)}">${lbl}</div></div>`;
+  }
+  body.innerHTML = `<h4>الأزواج</h4>${pairs}<h4>المصفوفة (آخر تقييم)</h4>${t}<h4>التطور عبر الأيام</h4><canvas id="chart"></canvas><div class="legend" id="legend"></div>`;
+  drawChart(A);
+}
+function drawChart(A) {
+  const c = $('#chart'), dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  c.width = W * dpr; c.height = H * dpr;
+  const g = c.getContext('2d'); g.scale(dpr, dpr);
+  const minDay = Math.min(...relRows.map(r => r.day)), maxDay = Math.max(minDay + 2, ...relRows.map(r => r.day)), L = 30, R = 12, T = 10, B = 22;
+  const X = d => L + (W - L - R) * (d - minDay) / (maxDay - minDay), Y = s => T + (H - T - B) * (1 - (s + 10) / 20);
+  g.font = '10px sans-serif'; g.fillStyle = '#8b97a6'; g.textAlign = 'right';
+  [-10, -5, 0, 5, 10].forEach(v => { g.beginPath(); g.lineWidth = v === 0 ? 1.5 : 1; g.strokeStyle = v === 0 ? '#4a5666' : '#26303b'; g.moveTo(L, Y(v)); g.lineTo(W - R, Y(v)); g.stroke(); g.fillText(v, L - 5, Y(v) + 3); });
+  g.textAlign = 'center';
+  const step = Math.max(1, Math.ceil((maxDay - minDay + 1) / 12));
+  for (let d = minDay; d <= maxDay; d += step) g.fillText('ي' + d, X(d), H - 6);
+  const leg = [];
+  A.forEach(s => { let k = 0; A.forEach(dst => {
+    if (s === dst) return;
+    const pts = relRows.filter(r => r.src === s && r.dst === dst), col = colorOf(s), dash = k++ % 2 ? [5, 4] : [];
+    leg.push(`<span><i style="border-color:${col};border-top-style:${dash.length ? 'dashed' : 'solid'}"></i>${esc(s)}→${esc(dst)}</span>`);
+    if (!pts.length) return;
+    g.beginPath(); g.setLineDash(dash); g.strokeStyle = col; g.lineWidth = 2;
+    pts.forEach((p, i) => i ? g.lineTo(X(p.day), Y(p.score)) : g.moveTo(X(p.day), Y(p.score))); g.stroke(); g.setLineDash([]);
+    g.fillStyle = col; pts.forEach(p => { g.beginPath(); g.arc(X(p.day), Y(p.score), 3, 0, 7); g.fill(); });
+  }); });
+  $('#legend').innerHTML = leg.join('');
+}
+
+/* ---------------- boss tab ---------------- */
+const PRESETS = ['⚠️ الميزانية اتخفضت ٢٠٪ والكل لازم يوفر.', '🏆 فيه ترقية واحدة بس متاحة الشهر ده.', '😡 العميل غاضب جداً وبيهدد يلغي العقد.', '🎉 الشركة كسبت عقد كبير!', '🕐 الـ deadline اتقدّم يومين.', '🍕 غدا مجاني النهارده على حساب الشركة.'];
+$('#presets').innerHTML = PRESETS.map(p => `<span class="pill">${p}</span>`).join('');
+$$('#presets .pill').forEach(p => p.onclick = () => $('#evText').value = p.textContent);
+const act = (p, body, ok) => { const r = sim.boss(p, body); r.error ? toast('⚠ ' + r.error) : toast(ok || 'تم'); refresh(); };
+$('#msgSend').onclick = () => { const t = $('#msgText').value.trim(); if (!t) return; act('message', { to: $('#msgTo').value, text: t }, 'اتبعتت'); $('#msgText').value = ''; };
+$('#prGo').onclick = () => act('promote', { name: $('#prName').value, title: $('#prTitle').value, raise_pct: $('#prRaise').value, announce: $('#prAnn').checked }, 'اتنفذ ✔');
+$('#tkGo').onclick = () => { const t = $('#tkTitle').value.trim(); if (!t) return; act('task', { title: t, assignee: $('#tkWho').value }, 'اتضافت المهمة'); $('#tkTitle').value = ''; };
+$('#evGo').onclick = () => { const t = $('#evText').value.trim(); if (!t) return; act('event', { text: t }, 'اتعلن'); $('#evText').value = ''; };
+$('#goalGo').onclick = () => { const t = $('#goalText').value.trim(); if (t) act('goal', { text: t }, 'اتغير الهدف'); };
+$('#ctlTurn').onclick = () => act('control', { action: 'turn_now', name: $('#ctlWho').value }, 'هيتحرك خلال ثواني');
+$('#ctlReflect').onclick = () => act('control', { action: 'reflect_now' }, 'هيتسجل التقييم');
+$('#ctlSkip').onclick = () => act('control', { action: 'skip_evening' }, 'تم (بيشتغل بس في المساء)');
+$('#ctlFire').onclick = () => confirm('متأكد؟') && act('fire', { name: $('#ctlWho').value }, 'تم الفصل');
+$('#ctlHire').onclick = () => act('rehire', { name: $('#ctlWho').value }, 'رجع الشركة');
+$('#btnPause').onclick = () => act('control', { action: S.paused ? 'resume' : 'pause' });
+
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type })); const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function doExport(kind) {
+  sim.flush(true);
+  if (kind === 'json') download('company-export.json', JSON.stringify(sim.exportAll(), null, 1), 'application/json');
+  else download(kind + '.csv', sim.exportCSV(kind), 'text/csv;charset=utf-8');
+}
+$$('[data-ex]').forEach(p => p.onclick = () => doExport(p.dataset.ex));
+
+/* ---------------- settings modal ---------------- */
+let draftKeys = {};
+function openSettings() {
+  draftKeys = {};
+  const c = sim.getConfig(), ags = sim.getAgentsConfig();
+  const provOpts = sel => Object.entries(PROVS).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(v.label)}</option>`).join('');
+  const keyRows = Object.entries(PROVS).filter(([k]) => k !== 'mock').map(([k, v]) => `
+    <div class="krow"><label>${esc(v.label)}</label>
+      <input type="password" autocomplete="off" data-key="${k}" placeholder="API key" value="${esc(KEYS[k] || '')}" style="direction:ltr">
+      <button class="btn" data-test="${k}">اختبار</button>
+      <div class="res" id="res-${k}"><span style="color:var(--dim)">${esc(v.link)}</span></div></div>`).join('');
+  const agCards = ags.map(a => `
+    <div class="acard" data-ag="${esc(a.name)}">
+      <div class="r1"><input data-f="emoji" value="${esc(a.emoji)}" maxlength="4" style="text-align:center"><b style="align-self:center;color:var(--gold)">${esc(a.name)}</b><input data-f="title" value="${esc(a.title)}" placeholder="المسمى"></div>
+      <div class="r2"><select data-f="provider">${provOpts(a.provider)}</select><input data-f="models" value="${esc(a.models)}" placeholder="models (comma separated)" style="direction:ltr"></div>
+      <textarea data-f="persona" placeholder="الشخصية">${esc(a.persona)}</textarea>
+      <textarea data-f="private_goal" placeholder="الهدف السري">${esc(a.private_goal)}</textarea></div>`).join('');
+  const canAdd = ags.length < SimEngine.MAX_AGENTS;
+  $('#mBody').innerHTML = `
+    <h3>🔑 مفاتيح الـ API</h3>
+    <small>المفاتيح بتتخزن في متصفحك بس، وبتتبعت مع كل طلب لفانكشن الموقع بتاعك اللي بتوصّلها للمزوّد — ماتتسجلش ولا بتتحفظ في أي سيرفر. حط اللي محتاجه بس.</small>
+    ${keyRows}
+    <h3>👥 الموظفين</h3>
+    <small>الموديلات (models) بتتجرب بالترتيب: لو الأول مش موجود في حسابك بيجرّب اللي بعده. التعديلات بتأثر من الدور الجاي.</small>
+    ${agCards}
+    ${canAdd ? `<details class="acard"><summary style="cursor:pointer">➕ إضافة موظف جديد</summary><div style="height:8px"></div>
+      <div class="r1" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px"><input id="nhName" placeholder="الاسم (بدون مسافات)"><input id="nhTitle" placeholder="المسمى"></div>
+      <div class="r2" style="display:grid;grid-template-columns:1fr 1.4fr;gap:6px;margin-bottom:6px"><select id="nhProv">${provOpts('gemini')}</select><input id="nhModels" value="${esc(PROVS.gemini.models)}" style="direction:ltr"></div>
+      <textarea id="nhPersona" placeholder="الشخصية" style="min-height:48px;margin-bottom:6px"></textarea><textarea id="nhGoal" placeholder="الهدف السري" style="min-height:48px;margin-bottom:6px"></textarea>
+      <button class="btn" id="nhAdd">أضف</button></details>` : '<small>وصلت للحد الأقصى (٦ موظفين).</small>'}
+    <h3>🏢 الشركة</h3>
+    <div class="g2"><label>اسم الشركة<input id="cName" value="${esc(c.company_name)}"></label><label>العملة<input id="cCur" value="${esc(c.currency)}"></label></div>
+    <label style="font-size:12px;color:var(--dim);display:block;margin-top:8px">هدف الشركة<input id="cGoal" value="${esc(c.goal)}"></label>
+    <label style="font-size:12px;color:var(--dim);display:block;margin-top:8px">لغة الموظفين في الكلام<input id="cLang" value="${esc(c.language)}"></label>
+    <h3>⏱ الوقت والتكلفة</h3>
+    <small>مفيش تاريخ نهاية — التجربة مفتوحة وبتكمّل طول ما الصفحة مفتوحة.</small>
+    <div class="g3">
+      <label>دقايق المشاهدة لكل يوم<input id="tDay" type="number" min="1" step="1" value="${c.day_real_minutes}"></label>
+      <label>دقايق بين تفكير الموظف<input id="tTurn" type="number" min="0.25" step="0.25" value="${c.turn_minutes}"></label>
+      <label>أقل فاصل بين دورين (ثانية)<input id="tGap" type="number" min="0" step="5" value="${c.min_gap_seconds}"></label>
+      <label>آخر ساعة شغل (0-23)<input id="tEnd" type="number" min="10" max="23" value="${c.work_end}"></label>
+      <label>ساعة التقييمات<input id="tRef" type="number" min="10" max="23" value="${c.reflection_hour}"></label>
+      <label>أقصى طلبات/ساعة لكل موظف<input id="tMax" type="number" min="1" value="${c.max_turns_per_hour}"></label>
+    </div>
+    <h3>💾 البيانات</h3>
+    <div class="pills"><span class="pill" data-ex="json">تصدير JSON كامل</span><span class="pill" data-ex="feed">feed.csv</span><span class="pill" data-ex="thoughts">thoughts.csv</span><span class="pill" data-ex="relations">relations.csv</span></div>
+    <button class="btn red" id="resetAll">🗑 مسح التجربة والبدء من الصفر</button>`;
+  $$('#mBody [data-ex]').forEach(p => p.onclick = () => doExport(p.dataset.ex));
+  $$('#mBody [data-key]').forEach(i => i.oninput = () => { draftKeys[i.dataset.key] = i.value.trim(); });
+  $$('#mBody [data-test]').forEach(b => b.onclick = async () => {
+    const k = b.dataset.test, res = $('#res-' + k), inp = $(`[data-key="${k}"]`);
+    KEYS[k] = inp.value.trim(); saveKeys(); res.className = 'res'; res.textContent = '… بيتجرب';
+    const r = await sim.testProvider(k); res.className = 'res ' + (r.ok ? 'ok' : 'bad'); res.textContent = (r.ok ? '✔ شغّال — ' : '✖ ') + r.detail;
+  });
+  $$('#mBody .acard select[data-f=provider]').forEach(s => s.onchange = () => { s.closest('.acard').querySelector('[data-f=models]').value = PROVS[s.value].models; });
+  const np = $('#nhProv'); if (np) np.onchange = () => { $('#nhModels').value = PROVS[np.value].models; };
+  const add = $('#nhAdd'); if (add) add.onclick = () => {
+    const r = sim.addAgent({ name: $('#nhName').value, title: $('#nhTitle').value, provider: $('#nhProv').value, models: $('#nhModels').value, persona: $('#nhPersona').value, private_goal: $('#nhGoal').value });
+    if (r.error) return toast('⚠ ' + r.error);
+    toast('اتضاف الموظف'); refresh(); openSettings();
+  };
+  $('#resetAll').onclick = async () => {
+    if (!confirm('ده هيمسح كل التجربة (الرسايل والأفكار والتقييمات). المفاتيح هتفضل. متأكد؟')) return;
+    await store.clear(); sim.init(null); sim.flush(true); feed = []; lastId = 0; builtN = 0; selected = null; closeSettings(); refresh(); renderFeed(true); toast('اتمسح — بدأت تجربة جديدة');
+  };
+  $('#modal').classList.add('show');
+}
+function closeSettings() { $('#modal').classList.remove('show'); }
+function saveSettings() {
+  $$('#mBody [data-key]').forEach(i => { KEYS[i.dataset.key] = i.value.trim(); });
+  saveKeys();
+  sim.updateConfig({
+    company_name: $('#cName').value, currency: $('#cCur').value, goal: $('#cGoal').value, language: $('#cLang').value,
+    day_real_minutes: $('#tDay').value, turn_minutes: $('#tTurn').value, min_gap_seconds: $('#tGap').value,
+    work_end: $('#tEnd').value, reflection_hour: $('#tRef').value, max_turns_per_hour: $('#tMax').value,
+  });
+  $$('#mBody .acard[data-ag]').forEach(card => {
+    const p = {}; card.querySelectorAll('[data-f]').forEach(i => p[i.dataset.f] = i.value);
+    sim.updateAgent(card.dataset.ag, p);
+  });
+  sim.flush(true); closeSettings(); refresh(); $('#goalText').value = sim.getConfig().goal; toast('اتحفظت الإعدادات');
+}
+$('#btnSettings').onclick = openSettings; $('#sbOpen').onclick = openSettings;
+$('#sbMock').onclick = () => { sim.useMockForAll(); refresh(); toast('الموظفين بقوا بموديلات وهمية — غيّرها من الإعدادات وقت ما تجهز'); };
+$('#mClose').onclick = closeSettings; $('#mCancel').onclick = closeSettings; $('#mSave').onclick = saveSettings;
+$('#modal').addEventListener('mousedown', e => { if (e.target.id === 'modal') closeSettings(); });
+
+/* ---------------- tabs + main loop ---------------- */
+function setTab(t) {
+  tab = t;
+  $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + t));
+  if (t === 'agent') loadAgent(); if (t === 'rel') loadRel(); if (t === 'feed') renderFeed(true);
+}
+$$('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.t));
+
+function refresh() {
+  S = sim.getState();
+  if (builtN !== S.agents.length) { buildStage(); agentSig = ''; }
+  fillSelects(); renderHeader(); renderAgents(); pollFeed();
+}
+
+(async function start() {
+  sim.init(await store.load());
+  S = sim.getState(); buildStage(); $('#goalText').value = S.goal;
+  refresh();
+  let last = performance.now();
+  setInterval(() => {
+    const n = performance.now(), dt = (n - last) / 1000; last = n;
+    sim.tick(dt);     // advances the company clock (frozen while a model is thinking or paused)
+    refresh();
+  }, 1000);
+  setInterval(() => { sim.flush(false); }, 8000);
+  setInterval(() => { if ($('#modal').classList.contains('show')) return; if (tab === 'agent') loadAgent(); if (tab === 'rel') loadRel(); }, 6000);
+  addEventListener('pagehide', () => sim.flush(true));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) sim.flush(true); });
+})();
+</script>
+</body>
+</html>

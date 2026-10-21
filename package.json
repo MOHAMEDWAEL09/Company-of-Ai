@@ -1,0 +1,6 @@
+{
+  "name": "ai-company-simulation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI company simulation: static page + one serverless relay function"
+}
