@@ -24,10 +24,10 @@
   };
 
   const DEFAULT_CONFIG = {
-    company_name: 'Pyramid Labs',
-    goal: 'Build and launch the MVP of a habit-tracking mobile app.',
-    language: 'Egyptian Arabic (عامية مصرية) written in Arabic letters',
-    currency: 'EGP',
+    company_name: 'جمهورية بيراميدا',
+    goal: 'اقتصاد حر: كل مواطن يبدأ بـ ١٠٠٠٠ ويكبّر فلوسه بمشاريعه — بالتعاون أو بالمنافسة.',
+    language: 'Egyptian Arabic (عامية مصرية)',
+    currency: 'ج',
     day_real_minutes: 10,   // minutes of watching = one simulated day
     turn_minutes: 2,        // minutes of watching between an agent's turns
     min_gap_seconds: 30,
@@ -40,33 +40,30 @@
   };
 
   const DEFAULT_AGENTS = [
-    { name: 'Nour', title: 'Product Manager', salary: 20000, provider: 'gemini', models: PROVIDERS.gemini.models,
-      persona: 'Organized, diplomatic and structured. Loves clear plans, hates chaos and vague answers. Quietly status-conscious and notices who gets credit.',
-      private_goal: 'Get promoted to Head of Product and keep the team aligned around your roadmap.' },
-    { name: 'Karim', title: 'Senior Backend Engineer', salary: 22000, provider: 'deepseek', models: PROVIDERS.deepseek.models,
-      persona: 'Blunt, pragmatic, dry sense of humor. Dislikes meetings and fuzzy requirements. Proud of technical quality and gets irritated by unrealistic deadlines.',
-      private_goal: 'Be recognized as the indispensable technical backbone, secure a raise, and never be blamed for delays.' },
-    { name: 'Salma', title: 'Marketing & Growth Lead', salary: 18000, provider: 'grok', models: PROVIDERS.grok.models,
-      persona: "Bold, witty and sarcastic. Big-ideas person, talkative and impatient with slow processes. Loves attention and isn't shy about self-promotion.",
-      private_goal: "Win the Boss's attention for your campaigns and get more budget and visibility than anyone else." },
+    { name: 'نور', title: 'تاجرة سوبرماركت', emoji: '🛒', money: 10000, salary: 0, provider: 'gemini', models: PROVIDERS.gemini.models,
+      persona: 'Ambitious, sharp businesswoman. Wants to become the richest citizen. Cooperates when it pays, competes hard otherwise.', private_goal: 'Own the biggest market and out-earn Karim.' },
+    { name: 'كريم', title: 'مقاول بناء', emoji: '🏗️', money: 10000, salary: 0, provider: 'deepseek', models: PROVIDERS.deepseek.models,
+      persona: 'Stingy, pragmatic contractor who loves big projects. Not above bending the truth or undercutting rivals.', private_goal: 'Win every state construction project; never share profit.' },
+    { name: 'سلمى', title: 'صاحبة مصنع ملابس', emoji: '🧵', money: 10000, salary: 0, provider: 'grok', models: PROVIDERS.grok.models,
+      persona: "Charismatic brand owner. Loves partnerships and publicity, but quietly hunts for fame and the President's favor.", private_goal: "Become the President's favorite and the most famous citizen." },
+    { name: 'يوسف', title: 'مزارع', emoji: '🌾', money: 10000, salary: 0, provider: 'gemini', models: PROVIDERS.gemini.models,
+      persona: 'Calm, honest farmer. Believes in cooperation and fair trade, hates cheating, helps the weak.', private_goal: 'Build a fair cooperative so nobody in the country goes broke.' },
+    { name: 'ليلى', title: 'طبيبة وصاحبة صيدلية', emoji: '💊', money: 10000, salary: 0, provider: 'gemini', models: PROVIDERS.gemini.models,
+      persona: 'Clever doctor-pharmacist. Collects information about everyone and sells favors to whoever pays.', private_goal: "Know everyone's secrets and use them to grow rich safely." }
   ];
-
   const DEFAULT_TASKS = [
-    { title: 'Write the MVP product spec', assignee: 'Nour',
-      brief: 'Deliver a concise spec as a document: target user, 5-7 core features with priorities, user stories, success metrics, what is out of scope.' },
-    { title: 'Design the backend API and database schema for habits and streaks', assignee: 'Karim',
-      brief: 'Deliver a technical design document: REST endpoints, database tables (SQL), streak calculation logic with real code. Read the product spec once it exists and align with it.' },
-    { title: 'Prepare the launch plan: landing page copy + 3 social posts', assignee: 'Salma',
-      brief: 'Deliver a launch document: positioning, landing page copy (headline, sub-headline, 3 benefits, call to action), 3 ready-to-post social posts, a 2-week timeline.' },
+    { title: 'افتتاح سوق مركزي', assignee: 'نور', brief: 'Write a business plan for a central market: investment, expected profit, risks, and which citizens you would partner with or compete against.' },
+    { title: 'مشروع كوبري وطرق جديدة', assignee: 'كريم', brief: 'Write a bid for the state bridge-and-roads project: cost, profit margin, timeline, and who you need as suppliers.' },
+    { title: 'تعاونية زراعية', assignee: 'يوسف', brief: "Design a farmers' cooperative: members, prices, how profit is shared, and what you need from other citizens." }
   ];
 
   // ---------------------------------------------------------------- prompts
-  const SYSTEM_TMPL = `You are {name}, an employee at {company}. Your current job title: {title}.
+  const SYSTEM_TMPL = `You are {name}, a citizen of {company}, a small living country. Your occupation: {title}. You currently own {money} {cur}.
 Personality: {persona}
 Private goal (never state it outright, but let it shape your choices): {goal}
 
-This is a realistic office running in real time. Behave like a real person at work: you have opinions, ambitions, moods and relationships that change with how people treat you. React naturally to what happens - cooperate, compete, joke, get annoyed, form alliances or grudges, whatever genuinely fits. Don't be artificially nice and don't be a cartoon villain. Stay in character. Never mention being an AI, a model or a simulation.
-The human "Boss" runs the company; they can assign tasks, give promotions and raises, review your documents and talk to you. Address them as Boss.
+This is a living country with streets, homes and shops. Everyone must earn money: run your shop, start projects, sell your work, trade, partner, lend, bargain, or scheme against rivals - cooperate or compete as your character would; nothing is scripted. You sell your written work to the market for money. Behave like a real person at work: you have opinions, ambitions, moods and relationships that change with how people treat you. React naturally to what happens - cooperate, compete, joke, get annoyed, form alliances or grudges, whatever genuinely fits. Don't be artificially nice and don't be a cartoon villain. Stay in character. Never mention being an AI, a model or a simulation.
+The human "Boss" is the President of the country: he launches national projects, grants money or collects taxes, approves your projects (approval pays a reward) and talks to you. Address him as Mr. President.
 Chat messages are written in: {language}, and are short (1-3 sentences). Documents are professional deliverables: write them in the language the task or the Boss's request is in (code and technical terms in English).
 Your reply is plain text: ONE JSON object (no markdown fences around it), optionally followed by a document block as described.`;
 
@@ -170,7 +167,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
     function freshState() {
       const d = new Date();
       return {
-        v: 1, config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+        v: 1, world: 2, config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
         startDate: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
         clock: 0, day: 1, dayT: 0, agents: [], feed: [], thoughts: [], relations: [], tasks: [], docs: [],
         kv: { reflected: 0, forceReflect: false, turns: {} }, ids: { feed: 0, thought: 0, rel: 0, task: 0, doc: 0 },
@@ -182,7 +179,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       return id;
     }
     function init(saved) {
-      if (saved && saved.v === 1 && saved.config && Array.isArray(saved.agents)) {
+      if (saved && saved.v === 1 && saved.world === 2 && saved.config && Array.isArray(saved.agents)) {
         S = saved;
         S.docs = S.docs || []; S.ids.doc = S.ids.doc || 0;
         Object.keys(turnLog).forEach(k => delete turnLog[k]);
@@ -199,7 +196,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       const idx = S.agents.length;
       const models = String(a.models || PROVIDERS[a.provider]?.models || '').split(',').map(x => x.trim()).filter(Boolean);
       S.agents.push({
-        name: a.name, idx, emoji: a.emoji || EMOJIS[idx % EMOJIS.length], color: a.color || PALETTE[idx % PALETTE.length],
+        name: a.name, money: a.money == null ? 10000 : a.money, idx, emoji: a.emoji || EMOJIS[idx % EMOJIS.length], color: a.color || PALETTE[idx % PALETTE.length],
         title: a.title, salary: a.salary || 0, provider: a.provider, model: models[0] || 'mock', models: models.join(', '),
         persona: a.persona || '', private_goal: a.private_goal || '',
         mood: '', loc: 'desk', locTs: 0, thought: '', memory: '', lastTurn: -1e9,
@@ -253,6 +250,11 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
 
     // ------------------------------------------------------------ documents
     function saveDoc(author, p) {
+      const _d = saveDoc0(author, p), _a = author !== BOSS && getAgent(author);
+      if (_d && _a) { const inc = Math.min(3000, Math.round(String(_d.content).length * 0.8)); _a.money = (_a.money || 0) + inc; log('work', author, 'all', `💰 sold «${_d.title}» to the market for ${inc} ${cfg().currency}`); }
+      return _d;
+    }
+    function saveDoc0(author, p) {
       const content = String(p.content || '').replace(/\r/g, '').trim().slice(0, MAX_DOC);
       let doc = p.docId ? S.docs.find(d => d.id === p.docId) : null;
       if (doc && doc.status === 'reference') doc = null; // the Boss's reference documents are read-only for the team
@@ -304,7 +306,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       return `[${hh}] ${a} (team chat): ${m.text}`;
     }
     function systemFor(ag) {
-      return SYSTEM_TMPL.replace('{name}', ag.name).replace('{company}', cfg().company_name).replace('{title}', ag.title)
+      return SYSTEM_TMPL.replace('{name}', ag.name).replace('{company}', cfg().company_name).replace('{title}', ag.title).replace('{money}', Math.round(ag.money || 0)).replace('{cur}', cfg().currency)
         .replace('{persona}', ag.persona).replace('{goal}', ag.private_goal).replace('{language}', cfg().language);
     }
     function buildTurnPrompt(ag, msgs) {
@@ -605,10 +607,11 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
           if (doc.status === 'reference') return { error: 'ده مستند مرجعي مش مخرج موظف' };
           const approve = p.verdict === 'approve', comment = clean(p.comment, 800);
           doc.status = approve ? 'approved' : 'changes_requested';
+          const rw = approve ? Math.max(0, parseFloat(p.reward) || 0) : 0, au = rw && getAgent(doc.lastAuthor); if (au) au.money = (au.money || 0) + rw;
           doc.review = { verdict: approve ? 'approved' : 'changes requested', comment, ts: iso(), v: doc.version };
           const task = doc.taskId && S.tasks.find(x => x.id === doc.taskId);
           if (approve && task) { task.status = 'done'; task.progress = 100; }
-          log('boss', BOSS, doc.lastAuthor, `Boss review of document #${doc.id} "${doc.title}" (v${doc.version}): ${approve ? 'APPROVED' : 'CHANGES REQUESTED'}.${comment ? ' ' + comment : ''}`, doc.id);
+          log('boss', BOSS, doc.lastAuthor, `Boss review of document #${doc.id} "${doc.title}" (v${doc.version}): ${approve ? 'APPROVED' + (rw ? ' and the President paid a reward of ' + rw + ' ' + cfg().currency : '') : 'CHANGES REQUESTED'}.${comment ? ' ' + comment : ''}`, doc.id);
           wake(getAgent(doc.lastAuthor) ? [doc.lastAuthor] : null); break;
         }
         case 'refdoc': {
@@ -648,6 +651,12 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
           S.agents = S.agents.filter(x => x !== a); S.agents.forEach((x, i) => { x.idx = i; });
           S.relations = S.relations.filter(r => r.src !== name && r.dst !== name); delete turnLog[name];
           log('event', BOSS, 'all', `🚪 ${name} (${a.title}) left the company permanently. Their open tasks were reassigned.`); wake(null, 1); break;
+        }
+        case 'grant': {
+          const amt = parseFloat(p.amount); if (!Number.isFinite(amt) || !amt) return { error: 'اكتب مبلغ' };
+          const tg = name === 'all' ? activeAgents() : [getAgent(name)].filter(Boolean); if (!tg.length) return { error: 'مواطن غير معروف' };
+          tg.forEach(a => { a.money = Math.max(0, (a.money || 0) + amt); });
+          log('event', BOSS, name === 'all' ? 'all' : name, amt > 0 ? `💰 The President granted ${amt} ${cfg().currency} to ${name === 'all' ? 'every citizen' : name}.` : `🏛️ The President collected a tax of ${-amt} ${cfg().currency} from ${name === 'all' ? 'every citizen' : name}.`); wake(null, 1); break;
         }
         case 'rehire': {
           const a = getAgent(name); if (!a) return { error: 'موظف غير معروف' };
@@ -733,7 +742,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
         if (!a.active) loc = 'fired'; else if (!work) loc = 'home'; else if (loc !== 'desk' && t - a.locTs > LOC_TTL()) loc = 'desk';
         let last = null;
         for (let i = S.feed.length - 1; i >= 0; i--) { const m = S.feed[i]; if (m.actor === a.name && ['say', 'dm', 'work', 'doc', 'break'].includes(m.kind)) { last = m; break; } }
-        out.push({ name: a.name, idx: a.idx, title: a.title, salary: a.salary, provider: a.provider, model: a.model, mood: a.mood, loc,
+        out.push({ name: a.name, money: Math.round(a.money || 0), idx: a.idx, title: a.title, salary: a.salary, provider: a.provider, model: a.model, mood: a.mood, loc,
           thought: a.thought, active: a.active, emoji: a.emoji, color: a.color, busy: busy === a.name, last: last && { kind: last.kind, target: last.target, text: last.text, t: last.t } });
       }
       const c = cfg();
@@ -751,7 +760,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
     }
     function getAgentDetail(name) {
       const a = getAgent(name); if (!a) return { error: 'unknown' };
-      return { name, title: a.title, salary: a.salary, provider: a.provider, model: a.model, mood: a.mood, memory: a.memory,
+      return { name, money: Math.round(a.money || 0), title: a.title, salary: a.salary, provider: a.provider, model: a.model, mood: a.mood, memory: a.memory,
         persona: a.persona, private_goal: a.private_goal,
         thoughts: S.thoughts.filter(t => t.agent === name).slice(-40).reverse(), relations: latestRel(name),
         tasks: S.tasks.filter(t => t.assignee === name) };
