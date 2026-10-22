@@ -640,6 +640,15 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
           const a = getAgent(name); if (!a) return { error: 'موظف غير معروف' };
           a.active = false; log('event', BOSS, 'all', `🚪 ${name} (${a.title}) has been let go by the Boss.`); wake(null, 1); break;
         }
+        case 'remove': {
+          const a = getAgent(name); if (!a) return { error: 'موظف غير معروف' };
+          if (busy === name) return { error: 'الموظف بيفكر دلوقتي — جرّب بعد ثواني' };
+          const rest = S.agents.filter(x => x !== a && x.active);
+          S.tasks = S.tasks.filter(t => { if (t.assignee !== name || t.status === 'done') return true; if (!rest.length) return false; t.assignee = rest[0].name; return true; });
+          S.agents = S.agents.filter(x => x !== a); S.agents.forEach((x, i) => { x.idx = i; });
+          S.relations = S.relations.filter(r => r.src !== name && r.dst !== name); delete turnLog[name];
+          log('event', BOSS, 'all', `🚪 ${name} (${a.title}) left the company permanently. Their open tasks were reassigned.`); wake(null, 1); break;
+        }
         case 'rehire': {
           const a = getAgent(name); if (!a) return { error: 'موظف غير معروف' };
           a.active = true; a.wake = true; log('event', BOSS, 'all', `🤝 ${name} is back at the company.`); break;

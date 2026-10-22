@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Company</title>
+<title>Pyramid Labs — Workspace</title>
 <link rel="icon" href="data:,">
 <script src="engine.js"></script>
 <style>
@@ -190,10 +190,47 @@ canvas#chart{width:100%;height:220px;display:block;background:#0e1319;border:1px
 #dTitle{min-width:0;overflow-wrap:anywhere;padding-inline-end:10px;line-height:1.5}
 </style>
 
+
+<style>
+/* ===== Corporate workspace theme ===== */
+:root{--bg:#f4f6fa;--panel:#fff;--panel2:#f6f8fb;--line:#e1e6ee;--text:#1b2433;--dim:#6b778a;--gold:#b7791f;--good:#1f9d63;--bad:#d64545;--blue:#2563eb;--violet:#7c4dff;--floor:#eef1f6;--wall:#b9c3d3}
+html,body{font-family:Inter,"Segoe UI","Noto Sans Arabic",Tahoma,system-ui,sans-serif;font-size:14px}
+header{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 3px #1b24330d;padding:10px 20px}
+.brand{display:flex;align-items:center;gap:10px;font-size:16px}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c4dff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.chip{background:#f1f4f9}.chip.on{background:#e6f6ee;border-color:#b6e3cb;color:#17794c}.chip.warn{background:#fff6e0;border-color:#f0d58a;color:#8a5a00}
+.btn{background:#fff;border-color:var(--line);color:var(--text);box-shadow:0 1px 2px #1b24330d}.btn:hover{background:#f1f4f9;border-color:#c9d2e0}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.gold{background:#fff6e0;border-color:#e6c76a;color:#7a4e00}.btn.red{background:#fdecec;border-color:#f1b5b5;color:#b42323}
+main{background:var(--bg)}
+#officeWrap,aside,.mbox{box-shadow:0 2px 10px #1b243314}
+#stage{background:#eef1f6}#stage::before{background:repeating-linear-gradient(0deg,transparent 0 39px,#1b243308 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,#1b243308 39px 40px)}
+.room{background:#fff;border:2px solid var(--wall);box-shadow:0 2px 8px #1b24330d}.room .rl{background:#eef1f6;color:#4a5568}
+.room.boss{background:#fff8e8;border-color:#e6c76a}.room.meet{background:#eef4ff}.room.kit{background:#effaf4}.room.lounge{background:#f5f1ff}.room.open{background:#fafbfd;border-style:solid;border-color:#d3dae6}
+.desk{background:#dfe5ee;border-color:#b3bfd1}.desk::before{background:#243042;border-color:#8795ab}.desk::after{background:#c3cddb}
+.table{background:#dfe5ee;border-color:#b3bfd1}
+.agent .av,.bossAv .av{background:#fff;box-shadow:0 3px 10px #1b243333}.bossAv .av{background:#fff8e8}
+.agent .nm{color:#1b2433;text-shadow:0 0 4px #fff,0 0 4px #fff}.agent .nm em{background:#1b2433cc;color:#fff}.bossAv .nm{color:#8a5a00}
+.agent .bub{box-shadow:0 3px 10px #1b243326;border:1px solid #e1e6ee}
+#night{background:#0f1a33b8}
+.tabs button{color:var(--dim)}.tabs button.on{color:var(--blue);border-bottom-color:var(--blue)}
+input,select,textarea,canvas#chart{background:#fff}
+.fi{background:#fff;border:1px solid var(--line);border-right:3px solid var(--line)}
+.fi.dm{background:#f6f2ff;border-right-color:var(--violet)}.fi.boss,.fi.toboss,.fi.event,.fi.promo{background:#fff8e8;border-right-color:#e6a817}.fi.error{background:#fdecec}.fi.work{border-right-color:var(--good)}.fi.task,.fi.doc{border-right-color:var(--blue)}.fi.doc:hover{background:#eef4ff}
+.card,.pair,.dcard,.acard{background:#fff;box-shadow:0 1px 2px #1b24330d}
+.bar,.bar i{border-radius:99px}.bar{background:#e8edf4}
+.th-i{background:#fff;border:1px solid var(--line)}
+#setupBar{background:#fff6e0;border-color:#f0d58a;color:#7a4e00}#proxyBar{background:#fdecec;border-color:#f1b5b5;color:#9b2c2c}
+#proxyBar code,#proxyBar pre,.mono{background:#1b24330f}
+.md pre,.md code{background:#f1f4f9}
+#toast{background:#1b2433;color:#fff;border:0}
+#modal,#dmodal{background:#1b243399}
+.mbody h3{color:var(--blue)}
+.agent.sel .av{box-shadow:0 0 0 4px #2563eb33,0 0 14px var(--c)}
+</style>
 </head>
 <body>
 <header>
-  <div class="brand"><span id="co">…</span><small id="goal"></small></div>
+  <div class="brand"><span class="logo" id="logo">P</span><span><span id="co">…</span><small id="goal"></small></span></div>
   <div class="sp"></div>
   <div><div class="clock" id="clock">--:--:--</div><div class="date" id="date"></div></div>
   <span class="chip" id="chipDay">اليوم 1</span>
@@ -211,11 +248,11 @@ canvas#chart{width:100%;height:220px;display:block;background:#0e1319;border:1px
   <section id="officeWrap"><div id="stage"></div></section>
   <aside>
     <div class="tabs">
-      <button data-t="feed" class="on">📡 مباشر</button>
-      <button data-t="agent">🧠 الموظف</button>
-      <button data-t="docs">📁 المخرجات</button>
-      <button data-t="rel">❤️ العلاقات</button>
-      <button data-t="boss">👔 المدير</button>
+      <button data-t="feed" class="on">النشاط</button>
+      <button data-t="agent">الموظف</button>
+      <button data-t="docs">المستندات</button>
+      <button data-t="rel">العلاقات</button>
+      <button data-t="boss">الإدارة</button>
     </div>
 
     <div class="pane on" id="pane-feed">
@@ -298,7 +335,8 @@ canvas#chart{width:100%;height:220px;display:block;background:#0e1319;border:1px
           <button class="btn" id="ctlTurn">خليه يتحرك دلوقتي</button>
           <button class="btn" id="ctlReflect">إنهاء اليوم الآن (تقييمات)</button>
           <button class="btn" id="ctlSkip">⏭ تخطي المساء</button>
-          <button class="btn red" id="ctlFire">فصل</button>
+          <button class="btn red" id="ctlFire">فصل مؤقت</button>
+          <button class="btn red" id="ctlRemove">🗑 حذف نهائي</button>
           <button class="btn" id="ctlHire">إرجاع</button>
         </div>
       </div>
@@ -441,7 +479,7 @@ function fillSelects() {
   $$('#agentPills .pill').forEach(p => p.onclick = () => selectAgent(p.dataset.n));
 }
 function renderHeader() {
-  $('#co').textContent = S.company;
+  $('#co').textContent = S.company; $('#logo').textContent = (S.company || 'P').trim().charAt(0).toUpperCase();
   $('#goal').textContent = '🎯 ' + S.goal;
   $('#chipDay').textContent = 'اليوم ' + S.day;
   const w = $('#chipWork');
@@ -599,6 +637,8 @@ $('#ctlTurn').onclick = () => act('control', { action: 'turn_now', name: $('#ctl
 $('#ctlReflect').onclick = () => act('control', { action: 'reflect_now' }, 'هيتسجل التقييم');
 $('#ctlSkip').onclick = () => act('control', { action: 'skip_evening' }, 'تم (بيشتغل بس في المساء)');
 $('#ctlFire').onclick = () => confirm('متأكد؟') && act('fire', { name: $('#ctlWho').value }, 'تم الفصل');
+const removeAgent = n => { if (!confirm('هتحذف ' + n + ' نهائياً من الشركة (بتاعه مهامه المفتوحة هتتحوّل لزميل). متأكد؟')) return false; const r = sim.boss('remove', { name: n }); if (r.error) { toast('⚠ ' + r.error); return false; } if (selected === n) selected = null; toast('اتحذف ' + n); refresh(); return true; };
+$('#ctlRemove').onclick = () => removeAgent($('#ctlWho').value);
 $('#ctlHire').onclick = () => act('rehire', { name: $('#ctlWho').value }, 'رجع الشركة');
 $('#btnPause').onclick = () => act('control', { action: S.paused ? 'resume' : 'pause' });
 
@@ -713,10 +753,11 @@ function openSettings() {
       <div class="res" id="res-${k}"><span style="color:var(--dim)">${esc(v.link)}</span></div></div>`).join('');
   const agCards = ags.map(a => `
     <div class="acard" data-ag="${esc(a.name)}">
-      <div class="r1"><input data-f="emoji" value="${esc(a.emoji)}" maxlength="4" style="text-align:center"><b style="align-self:center;color:var(--gold)">${esc(a.name)}</b><input data-f="title" value="${esc(a.title)}" placeholder="المسمى"></div>
+      <div class="r1"><input data-f="emoji" value="${esc(a.emoji)}" maxlength="4" style="text-align:center"><b style="align-self:center;color:var(--gold)">${esc(a.name)}${a.active ? '' : ' (مفصول)'}</b><input data-f="title" value="${esc(a.title)}" placeholder="المسمى"></div>
       <div class="r2"><select data-f="provider">${provOpts(a.provider)}</select><input data-f="models" list="dl-${esc(a.provider)}" value="${esc(a.models)}" placeholder="models (comma separated)" style="direction:ltr"></div>
       <textarea data-f="persona" placeholder="الشخصية">${esc(a.persona)}</textarea>
-      <textarea data-f="private_goal" placeholder="الهدف السري">${esc(a.private_goal)}</textarea></div>`).join('');
+      <textarea data-f="private_goal" placeholder="الهدف السري">${esc(a.private_goal)}</textarea>
+      <button class="btn red" data-rm="${esc(a.name)}">🗑 حذف الموظف نهائياً</button></div>`).join('');
   const canAdd = ags.length < SimEngine.MAX_AGENTS;
   $('#mBody').innerHTML = `
     <h3>🔑 مفاتيح الـ API</h3>
@@ -750,6 +791,7 @@ function openSettings() {
     <div class="pills"><span class="pill" data-ex="json">تصدير JSON كامل</span><span class="pill" data-ex="feed">feed.csv</span><span class="pill" data-ex="thoughts">thoughts.csv</span><span class="pill" data-ex="relations">relations.csv</span></div>
     <button class="btn red" id="resetAll">🗑 مسح التجربة والبدء من الصفر</button>`;
   $$('#mBody [data-ex]').forEach(p => p.onclick = () => doExport(p.dataset.ex));
+  $$('#mBody [data-rm]').forEach(b => b.onclick = () => { if (removeAgent(b.dataset.rm)) openSettings(); });
   $$('#mBody [data-key]').forEach(i => i.oninput = () => { draftKeys[i.dataset.key] = i.value.trim(); });
   $$('#mBody [data-test]').forEach(b => b.onclick = async () => {
     const k = b.dataset.test, res = $('#res-' + k), inp = $(`[data-key="${k}"]`);
