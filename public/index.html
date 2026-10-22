@@ -877,7 +877,7 @@ function refresh() {
 
 <style>
 #stage{background:#cde7c3}#stage::before{display:none}
-.road{position:absolute;left:0;width:1000px;background:#5b6371;border-top:3px solid #7a8392;border-bottom:3px solid #7a8392}.road::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:3px dashed #e9edf3aa}
+.assets{position:absolute;left:8px;right:8px;top:28px;display:flex;flex-wrap:wrap;gap:1px;font-size:19px;pointer-events:none}.road{position:absolute;left:0;width:1000px;background:#5b6371;border-top:3px solid #7a8392;border-bottom:3px solid #7a8392}.road::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:3px dashed #e9edf3aa}
 .room.shop{background:#fff;border-color:#c9d2e0;border-top:12px solid var(--c)}.room.shop .rl,.room.house .rl{top:2px;left:10px;background:none;color:#1b2433}
 .room.house{background:#fff7ea;border-color:#d9b98a;border-top:14px solid var(--c)}
 .room.palace{background:#fff6dc;border-color:#d4a82f}.room.park{background:#b9dfa8;border-color:#8cc07a}.room.square{background:#e6edf7;border-color:#9fb0c9}.room.market{background:#ffe9c9;border-color:#e0a95a}
@@ -894,7 +894,7 @@ function buildStage() {
   <div class="room market" style="left:800px;top:578px;width:180px;height:88px"><span class="rl">🧺 السوق</span></div>
   <div class="deco" style="left:790px;top:48px">⛲</div><div class="deco" style="left:365px;top:60px">🌳</div><div class="deco" style="left:600px;top:60px">🌳</div><div class="deco" style="left:480px;top:40px">🌷</div><div class="deco" style="left:250px;top:50px">🪴</div><div class="deco" style="left:20px;top:240px">🌳</div><div class="deco" style="left:950px;top:240px">🌳</div>`;
   S.agents.forEach(a => { const i = a.idx, x = 120 + (i % 3) * 320, y = i < 3 ? 262 : 407;
-    h += `<div class="room shop" style="left:${x - 40}px;top:${y - 20}px;width:200px;height:105px;--c:${a.color}"><span class="rl">${SG[i % 6]} ${esc(a.title)}</span></div>
+    h += `<div class="room shop" style="left:${x - 40}px;top:${y - 20}px;width:200px;height:105px;--c:${a.color}"><span class="rl">${SG[i % 6]} ${esc(a.title)}</span><div class="assets" id="as-${i}"></div></div>
     <div class="room house" style="left:${30 + i * 125}px;top:578px;width:112px;height:88px;--c:${a.color}"><span class="rl">🏠 ${esc(a.name)}</span></div>`; });
   h += `<div class="bossAv"><div class="av">🎖️</div><div class="nm">الرئيس (أنت)</div></div>`;
   S.agents.forEach(a => { h += `<div class="agent" id="ag-${a.idx}" style="--c:${a.color}" data-n="${esc(a.name)}"><div class="bub"></div><div class="th">💭</div><div class="av">${esc(a.emoji)}</div><div class="nm"><span class="n"></span><small class="t"></small><em class="m"></em></div></div>`; });
@@ -920,9 +920,12 @@ function posFor(a, group) {
 const _oldRefresh = refresh;
 refresh = function () { _oldRefresh(); extra(); };
 function extra() {
+  const icons = n => (S.assets || []).filter(x => x.owner === n).map(x => S.catalog[x.type].icon).join('');
+  S.agents.forEach(a => { const el = $('#as-' + a.idx); if (el) el.textContent = icons(a.name); });
   const A = S.agents, tot = A.reduce((s, a) => s + (a.money || 0), 0), mx = Math.max(1, ...A.map(a => a.money || 0));
   $('#chipGdp').textContent = '💰 ' + fmt(tot) + ' ' + S.currency;
-  $('#rich').innerHTML = [...A].sort((a, b) => b.money - a.money).map((a, i) => `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between"><span>${i ? '' : '👑 '}${esc(a.emoji)} <b style="color:${a.color}">${esc(a.name)}</b> <small style="color:var(--dim)">${esc(a.title)}</small></span><b>${fmt(a.money)}</b></div><div class="bar"><i style="width:${100 * a.money / mx}%;background:${a.color}"></i></div></div>`).join('') || '<div class="empty">—</div>';
+  $('#rich').innerHTML = [...A].sort((a, b) => b.money - a.money).map((a, i) => `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between"><span>${i ? '' : '👑 '}${esc(a.emoji)} <b style="color:${a.color}">${esc(a.name)}</b> <small style="color:var(--dim)">${esc(a.title)}</small></span><b>${fmt(a.money)}</b></div><div style="font-size:15px">${icons(a.name) || '<small style="color:var(--dim)">بلا أملاك</small>'}</div><div class="bar"><i style="width:${100 * a.money / mx}%;background:${a.color}"></i></div></div>`).join('') || '<div class="empty">—</div>';
+  $('#rich').innerHTML += '<hr style="border:0;border-top:1px solid var(--line)"><small style="color:var(--dim)">' + Object.values(S.catalog || {}).map(c => `${c.icon} ${c.ar} ${fmt(c.cost)} (+${fmt(c.income)}/يوم)`).join(' · ') + '<br>المعيشة ٢٥٠/يوم لكل مواطن</small>';
   const sig = A.map(a => a.name).join('|');
   if (sig !== extra.s) { extra.s = sig; const v = $('#gvWho').value; $('#gvWho').innerHTML = '<option value="all">كل المواطنين</option>' + A.map(a => `<option value="${esc(a.name)}">${esc(a.emoji)} ${esc(a.name)}</option>`).join(''); if (v) $('#gvWho').value = v; }
 }

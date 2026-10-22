@@ -57,6 +57,9 @@
     { title: 'تعاونية زراعية', assignee: 'يوسف', brief: "Design a farmers' cooperative: members, prices, how profit is shared, and what you need from other citizens." }
   ];
 
+  const CATALOG = { farm: { icon: '🌾', ar: 'مزرعة', cost: 8000, income: 450 }, shop: { icon: '🏪', ar: 'محل', cost: 6000, income: 350 },
+    bakery: { icon: '🥖', ar: 'مخبز', cost: 9000, income: 520 }, factory: { icon: '🏭', ar: 'مصنع', cost: 15000, income: 900 }, tower: { icon: '🏢', ar: 'برج تجاري', cost: 28000, income: 1700 } };
+  const LIVING = 250;
   // ---------------------------------------------------------------- prompts
   const SYSTEM_TMPL = `You are {name}, a citizen of {company}, a small living country. Your occupation: {title}. You currently own {money} {cur}.
 Personality: {persona}
@@ -70,20 +73,27 @@ Your reply is plain text: ONE JSON object (no markdown fences around it), option
   const TURN_FMT = `Decide what you do right now. Reply with exactly ONE JSON object:
 {"thought": "your private inner thinking, 2-4 honest sentences (nobody sees this)",
  "mood": "one or two words",
- "action": "say | dm | doc | work | delegate | break | idle",
+ "action": "say | dm | doc | work | delegate | build | offer | accept | pay | break | idle",
  "to": "coworker name or Boss (for dm / delegate), else null",
  "text": "short chat message, or 1-2 sentence summary of what you did / changed",
  "task_id": null,
  "progress": null,
  "doc_id": null,
  "doc_title": null,
- "task_title": null}
+ "task_title": null,
+ "item": null,
+ "price": null}
 Actions:
 - say: post in the public team chat.
 - dm: private message to one person.
 - doc: create or revise a REAL deliverable in the shared workspace (spec, plan, copy, analysis, code, report...). After the JSON, on new lines write the FULL document between a line "=====DOC=====" and a line "=====END=====" (markdown; code inside code blocks). Set doc_title. Set doc_id to revise an existing document (then write the complete new version). Set task_id (and progress 0-100) when it is work on a task. The document must contain the actual content, never a description of content. Keep it focused (about 700 words or 150 lines of code at most).
 - work: a short progress update on a task (task_id + progress 0-100) when there is no document to share.
 - delegate: create a task for a coworker or yourself: to, task_title, and text = the brief.
+- build: construct an asset, paying its cost from your money: item = farm | shop | bakery | factory | tower. Assets pay you income every day.
+- offer: propose to sell one of YOUR assets to the person in to: item = asset id, price = your asking price (number).
+- accept: accept an offer made to you: item = offer id. You pay the price and receive the asset.
+- pay: send the price amount of money to the person named in to, for goods, services, a loan or a deal you agreed on in chat.
+Money is power: invest, trade, undercut, ally or betray - as your character would. You cannot spend money you do not have.
 - break / idle.
 Collaborate for real: read the documents of your coworkers shown below, then review them, build on them, fix mistakes, answer questions or ask for changes (dm). If the Boss asks for something concrete, produce it for real with a doc. Do not repeat yourself. If nobody wrote to you and you have no task, take a break or idle instead of inventing chatter.`;
 
@@ -169,7 +179,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       return {
         v: 1, world: 2, config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
         startDate: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
-        clock: 0, day: 1, dayT: 0, agents: [], feed: [], thoughts: [], relations: [], tasks: [], docs: [],
+        clock: 0, day: 1, dayT: 0, agents: [], feed: [], thoughts: [], relations: [], tasks: [], docs: [], assets: [], offers: [], nid: 1,
         kv: { reflected: 0, forceReflect: false, turns: {} }, ids: { feed: 0, thought: 0, rel: 0, task: 0, doc: 0 },
       };
     }
@@ -325,6 +335,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       if (mine.length) mine.forEach(t => L.push(`- #${t.id} ${t.title} (${t.progress}% done${t.docId ? `, deliverable: doc #${t.docId}` : ''}, from ${t.by === BOSS ? 'the Boss' : t.by})` + (t.brief ? `\n  brief: ${t.brief}` : ''))); else L.push('- none');
       L.push('', 'Team board:');
       if (S.tasks.length) S.tasks.slice(-20).forEach(t => L.push(`- #${t.id} ${t.title} -> ${t.assignee} [${t.status}, ${t.progress}%]`)); else L.push('- empty');
+      L.push(...worldSection(ag));
       L.push('', ...docsSection(ag));
       if (own.length) {
         L.push('', 'What you did recently:');
@@ -460,6 +471,23 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       task.progress = prog; task.status = prog >= 100 ? 'done' : 'in_progress'; if (text) task.notes = text.slice(0, 1000);
       return prog;
     }
+    function W() { S.assets = S.assets || []; S.offers = S.offers || []; S.nid = S.nid || 1; }
+    function worldSection(ag) {
+      W(); const L = ['', `Economy: you own ${Math.round(ag.money || 0)} ${cfg().currency}. Living costs ${LIVING}/day; assets pay income every day.`,
+        'Buildable assets (action build): ' + Object.entries(CATALOG).map(([k, v]) => `${k} ${v.icon} costs ${v.cost}, earns ${v.income}/day`).join('; ') + '.'];
+      const own = S.assets.filter(a => a.owner === ag.name), oth = S.assets.filter(a => a.owner !== ag.name), of = S.offers.filter(o => o.to === ag.name);
+      L.push('Your assets: ' + (own.map(a => `#${a.id} ${a.type}`).join(', ') || 'none'));
+      if (oth.length) L.push('Others own: ' + oth.map(a => `#${a.id} ${a.type} (${a.owner})`).join(', '));
+      if (of.length) L.push('Offers made to you (accept with item = offer id): ' + of.map(o => { const a = S.assets.find(x => x.id === o.asset); return `offer #${o.id}: ${o.from} sells ${a ? a.type : '?'} #${o.asset} for ${o.price}`; }).join('; '));
+      return L;
+    }
+    function payDay() {
+      W(); const by = {};
+      activeAgents().forEach(a => { by[a.name] = -LIVING; });
+      S.assets.forEach(x => { if (by[x.owner] != null) by[x.owner] += CATALOG[x.type].income; });
+      activeAgents().forEach(a => { a.money = Math.max(0, (a.money || 0) + by[a.name]); });
+      log('event', BOSS, 'all', `🌅 Day ${S.day}: daily net — ` + Object.entries(by).map(([n, v]) => `${n} ${v >= 0 ? '+' : ''}${v}`).join(', '));
+    }
     function applyTurn(ag, d, reasoning, msgs, docText) {
       const name = ag.name, t = S.clock;
       const valid = new Set(activeAgents().map(a => a.name)); valid.delete(name);
@@ -495,6 +523,19 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
           log('task', name, who, `New task #${id} for ${who} from ${name}: ${title}`);
           if (who !== name) { wake([who]); loc = '@' + who; }
         }
+      } else if (action === 'build' || action === 'offer' || action === 'accept' || action === 'pay') {
+        W(); const item = clean(d.item, 30).toLowerCase(), price = Math.round(parseFloat(d.price)), cur = cfg().currency;
+        if (action === 'build') { const T = CATALOG[item];
+          if (T && (ag.money || 0) >= T.cost && S.assets.filter(x => x.owner === name).length < 8) { ag.money -= T.cost; S.assets.push({ id: S.nid++, type: item, owner: name, day: S.day }); log('event', name, 'all', T.icon + ' ' + name + ' built a ' + item + ' for ' + T.cost + ' ' + cur + '. ' + text); }
+          else log('work', name, 'all', '⚠ ' + name + ' wanted to build "' + item + '" but could not.');
+        } else if (action === 'offer') { const as = S.assets.find(x => String(x.id) === item && x.owner === name);
+          if (as && to && to !== BOSS && price > 0) { const oid = S.nid++; S.offers.push({ id: oid, from: name, to, asset: as.id, price }); S.offers = S.offers.slice(-20);
+            log('dm', name, to, '🏷️ Offer #' + oid + ': my ' + as.type + ' #' + as.id + ' for ' + price + ' ' + cur + '. ' + text); wake([to]); loc = '@' + to; }
+        } else if (action === 'accept') { const o = S.offers.find(x => String(x.id) === item && x.to === name), as = o && S.assets.find(x => x.id === o.asset && x.owner === o.from), se = o && getAgent(o.from);
+          if (o && as && se && (ag.money || 0) >= o.price) { ag.money -= o.price; se.money = (se.money || 0) + o.price; as.owner = name; S.offers = S.offers.filter(x => x !== o);
+            log('event', name, 'all', '🤝 Deal: ' + name + ' bought ' + as.type + ' #' + as.id + ' from ' + se.name + ' for ' + o.price + ' ' + cur + '.'); wake([se.name]); loc = '@' + se.name; }
+        } else if (to && to !== BOSS && price > 0 && (ag.money || 0) >= price) { const tg = getAgent(to); ag.money -= price; tg.money = (tg.money || 0) + price;
+          log('dm', name, to, '💸 Paid ' + price + ' ' + cur + '. ' + text); wake([to]); loc = '@' + to; }
       } else if (action === 'break') {
         log('break', name, 'all', text || '☕'); loc = pick(['kitchen', 'lounge'], D.rand);
       }
@@ -573,7 +614,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       try {
         dt = clamp(dt, 0, 120);
         S.clock += dt; S.dayT += dt;
-        while (S.dayT >= DAY_S()) { S.dayT -= DAY_S(); S.day += 1; }
+        while (S.dayT >= DAY_S()) { S.dayT -= DAY_S(); S.day += 1; payDay(); }
         if (reflectionDue()) {
           for (const ag of activeAgents()) await runReflection(ag);
           S.kv.reflected = S.day; S.kv.forceReflect = false;
@@ -648,6 +689,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
           if (busy === name) return { error: 'الموظف بيفكر دلوقتي — جرّب بعد ثواني' };
           const rest = S.agents.filter(x => x !== a && x.active);
           S.tasks = S.tasks.filter(t => { if (t.assignee !== name || t.status === 'done') return true; if (!rest.length) return false; t.assignee = rest[0].name; return true; });
+          W(); S.assets = S.assets.filter(x => x.owner !== name); S.offers = S.offers.filter(o => o.from !== name && o.to !== name);
           S.agents = S.agents.filter(x => x !== a); S.agents.forEach((x, i) => { x.idx = i; });
           S.relations = S.relations.filter(r => r.src !== name && r.dst !== name); delete turnLog[name];
           log('event', BOSS, 'all', `🚪 ${name} (${a.title}) left the company permanently. Their open tasks were reassigned.`); wake(null, 1); break;
@@ -747,7 +789,7 @@ Score meaning: -10 = hate / bitter rival, 0 = neutral, +10 = very close friend y
       }
       const c = cfg();
       const missing = [...new Set(S.agents.filter(a => a.active && a.provider !== 'mock' && !D.getKey(a.provider)).map(a => PROVIDERS[a.provider].label))];
-      return { company: c.company_name, goal: c.goal, now: iso(), server_ts: t, day: S.day, work, paused, busy,
+      W(); return { catalog: CATALOG, assets: S.assets.map(a => ({ ...a })), company: c.company_name, goal: c.goal, now: iso(), server_ts: t, day: S.day, work, paused, busy,
         bubble_ttl: BUBBLE_TTL(), work_hours: [c.day_start_hour, c.work_end], currency: c.currency, day_real_minutes: c.day_real_minutes,
         agents: out, tasks: S.tasks.map(x => Object.assign({}, x)), turns_today: S.kv.turns[turnsKey()] || 0,
         needs_setup: missing.length > 0, missing_keys: missing, docs_count: S.docs.length };
